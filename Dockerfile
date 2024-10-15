@@ -4,6 +4,8 @@ ENV \
   STRONGBOX_VERSION=2.0.0-RC4 \
   KUSTOMIZE_VERSION=v5.4.1
 
+ENV HELM_VERSION=v3.16.2
+
 RUN os=$(go env GOOS) && arch=$(go env GOARCH) \
       && apk --no-cache add curl \
       && curl -Ls https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_${os}_${arch}.tar.gz \
@@ -11,7 +13,11 @@ RUN os=$(go env GOOS) && arch=$(go env GOARCH) \
       && chmod +x /usr/local/bin/kustomize \
       && curl -Ls https://github.com/uw-labs/strongbox/releases/download/v${STRONGBOX_VERSION}/strongbox_${STRONGBOX_VERSION}_${os}_${arch} \
            > /usr/local/bin/strongbox \
-      && chmod +x /usr/local/bin/strongbox
+      && chmod +x /usr/local/bin/strongbox \
+      && curl -O https://get.helm.sh/helm-${HELM_VERSION}-${os}-${arch}.tar.gz \
+      && tar -xf helm-${HELM_VERSION}-${os}-${arch}.tar.gz \
+      && cp ${os}-${arch}/helm /usr/local/bin/helm \
+      && chmod +x /usr/local/bin/helm
 
 ADD . /app
 WORKDIR /app
@@ -33,6 +39,7 @@ RUN adduser -S -H -u $ARGOCD_USER_ID argocd \
 COPY --from=build \
   /usr/local/bin/kustomize \
   /usr/local/bin/strongbox \
+  /usr/local/bin/helm \
   /argocd-voodoobox-plugin \
   /usr/local/bin/
 
